@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- CodeMirror & Xterm -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+
+<!-- Mobile Header -->
+<header class="md:hidden h-14 flex items-center justify-between px-4 glass-panel z-50 sticky top-0 border-b border-white/5 bg-black/80 backdrop-blur-xl">
+    <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" class="text-white">
+            <svg width="24" height="24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span class="font-nothing text-xl tracking-widest">N-BOOK</span>
+    </div>
+    <div class="flex items-center gap-3">
+        <span id="mobile-ram-text" class="text-[10px] font-mono text-gray-400">WAIT...</span>
+        <div class="w-2.5 h-2.5 rounded-full bg-n-red animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]" id="status-dot-mobile"></div>
+    </div>
+</header>
+
+<div id="drawer-overlay" class="fixed inset-0 bg-black/90 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-[85%] md:w-96 glass-panel z-50 transform -translate-x-full md:translate-x-0 md:relative flex flex-col transition-transform duration-300 border-r border-white/5 bg-[#0a0a0a]">
+    <div class="p-6 h-full flex flex-col">
+        <!-- Sidebar Header with Project Actions -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="font-nothing text-4xl text-white tracking-widest">N-BOOK<span class="text-n-red">.</span></h1>
+            <div class="flex gap-2">
+                <button onclick="newProject()" title="New Project" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+                <button onclick="openHistory()" title="Project History" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex gap-4 border-b border-white/10 pb-2">
+            <button onclick="switchTab('files')" class="tab-btn active text-xs font-bold text-white pb-1 border-b-2 border-n-red">FILES</button>
+            <button onclick="switchTab('term')" class="tab-btn text-xs font-bold text-gray-500 pb-1 hover:text-white">TERM</button>
+            <button onclick="switchTab('vars')" class="tab-btn text-xs font-bold text-gray-500 pb-1 hover:text-white">VARS</button>
+            <button onclick="switchTab('git')" class="tab-btn text-xs font-bold text-gray-500 pb-1 hover:text-white">GIT</button>
+        </div>
+
+        <div class="mt-4 flex-1 overflow-hidden relative">
+            <!-- FILES TAB -->
+            <div id="tab-files" class="h-full overflow-y-auto no-scrollbar space-y-2">
+                <div class="text-[10px] font-mono text-gray-500 mb-2 truncate" id="current-path-display">/</div>
+                <div id="file-back-btn" class="hidden flex items-center gap-2 p-2 rounded hover:bg-white/5 cursor-pointer text-yellow-500" onclick="goUpDir()">
+                    <span class="text-xs">📂</span> <span class="text-xs font-bold">..</span>
+                </div>
+                <div id="file-list" class="space-y-1 text-sm font-mono text-gray-400">Loading...</div>
+            </div>
+
+            <!-- OTHER TABS -->
+            <div id="tab-term" class="hidden h-full flex flex-col">
+                <div id="terminal-container" class="flex-1 bg-black rounded-lg border border-white/10 overflow-hidden pl-1 pt-1"></div>
+            </div>
+            <div id="tab-vars" class="hidden h-full overflow-y-auto no-scrollbar space-y-2">
+                <button onclick="loadVars()" class="text-xs w-full text-center mb-2 text-blue-400">Refresh</button>
+                <div id="var-list" class="space-y-2"></div>
+            </div>
+            <div id="tab-git" class="hidden h-full overflow-y-auto no-scrollbar space-y-3">
+                <input type="text" id="repo-url" placeholder="https://github.com/user/repo" class="w-full bg-white/5 border border-white/10 rounded p-2 text-xs text-white">
+                <button onclick="cloneRepo()" class="w-full bg-white/10 hover:bg-white/20 text-white text-xs py-2 rounded">CLONE REPO</button>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-white/10 mt-auto">
+            <button onclick="saveProject()" class="w-full py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded hover:bg-blue-500 hover:text-white transition text-xs font-bold mb-2">SAVE PROJECT</button>
+            <button onclick="downloadJSON()" class="w-full py-2 bg-n-red/10 text-n-red border border-n-red/20 rounded hover:bg-n-red hover:text-white transition text-xs font-bold">EXPORT JSON</button>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Area -->
+<main class="flex-1 flex flex-col h-[calc(100vh-3.5rem)] md:h-screen w-full relative">
+    <!-- Desktop Header -->
+    <div class="hidden md:flex items-center justify-between p-6">
+        <div class="flex-1">
+             <input type="text" id="nb-title" value="Untitled Research" class="bg-transparent text-xl font-bold focus:outline-none w-full font-sans placeholder-gray-600">
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
+                <div class="group relative cursor-help">
+                    <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-gray-400">RAM</span><div class="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden"><div id="ram-bar" class="h-full bg-green-500 w-0 transition-all duration-500"></div></div></div>
+                    <div class="hidden group-hover:block absolute top-6 left-0 bg-black border border-white/10 p-2 rounded text-[10px] w-24 z-50"><div id="ram-text" class="text-white">-- / -- GB</div></div>
+                </div>
+                <div class="group relative cursor-help">
+                    <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-gray-400">DISK</span><div class="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden"><div id="disk-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div></div></div>
+                    <div class="hidden group-hover:block absolute top-6 left-0 bg-black border border-white/10 p-2 rounded text-[10px] w-24 z-50"><div id="disk-text" class="text-white">-- / -- GB</div></div>
+                </div>
+                <div class="flex items-center gap-2 border-l border-white/10 pl-4"><span id="conn-text" class="text-[10px] font-bold text-gray-500">CONNECTING</span><div class="w-2.5 h-2.5 rounded-full bg-n-red animate-pulse" id="status-dot-desktop"></div></div>
+            </div>
+
+            <div class="flex gap-2 relative">
+                <button onclick="restartKernel()" class="px-4 py-1.5 rounded-full border border-n-red/50 text-n-red hover:bg-n-red hover:text-white transition text-xs font-bold">RESTART</button>
+                <button onclick="addCell('python')" class="px-5 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition text-xs font-bold tracking-widest flex items-center gap-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> PYTHON</button>
+                <div class="relative">
+                    <button onclick="togglePlusMenu()" class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/20 transition text-white font-bold text-lg flex items-center justify-center">+</button>
+                    <div id="plus-menu" class="hidden absolute top-10 right-0 glass-panel rounded-xl flex flex-col w-32 shadow-xl z-50 overflow-hidden">
+                        <button onclick="addCell('html')" class="px-4 py-2 text-left text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-orange-500">&lt;&gt;</span> HTML</button>
+                        <button onclick="addCell('markdown')" class="px-4 py-2 text-left text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white flex items-center gap-2"><span class="text-purple-500">M↓</span> MARKDOWN</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notebook -->
+    <div id="notebook-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-32 no-scrollbar w-full"></div>
+
+    <!-- Mobile FAB -->
+    <div class="md:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-30 items-end">
+        <div id="mobile-fab-menu" class="hidden flex flex-col gap-3 items-end mb-2">
+            <button onclick="addCell('html')" class="glass-panel px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 text-orange-400">HTML <span class="bg-orange-500/20 p-1 rounded">H</span></button>
+            <button onclick="addCell('markdown')" class="glass-panel px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 text-purple-400">MARKDOWN <span class="bg-purple-500/20 p-1 rounded">M</span></button>
+        </div>
+        <button onclick="addCell('python')" class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 font-bold text-xs shadow-lg">PY</button>
+        <button onclick="toggleMobileFab()" class="w-14 h-14 rounded-full bg-n-red text-white flex items-center justify-center shadow-lg font-bold text-2xl transition-transform" id="fab-plus">+</button>
+    </div>
+</main>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiKey = urlParams.get('key');
+    let loadId = urlParams.get('load_id'); // Make mutable to update on save
+    if (apiKey) $.ajaxSetup({ headers: { 'X-API-KEY': apiKey } });
+    const socket = io({ query: apiKey ? { key: apiKey } : {} });
+    
+    let cellCount = 0;
+    const editors = {};
+    let currentPath = "";
+    let term = null; let fitAddon = null;
+
+    // --- INITIALIZATION ---
+    $(document).ready(() => {
+        if(loadId) {
+            $.get(`/history/load/${loadId}`, (data) => {
+                $('#nb-title').val(data.title);
+                data.cells.forEach(c => addCell(c.language, c.code));
+            }).fail(() => addCell('python'));
+        } else {
+            addCell('python');
+        }
+        loadFiles();
+    });
+
+    // --- PROJECT ACTIONS ---
+    function newProject() {
+        if(!confirm("Clear current project? Unsaved changes will be lost.")) return;
+        $('#notebook-container').empty();
+        $('#nb-title').val("Untitled Research");
+        cellCount = 0;
+        loadId = null; // Reset load ID
+        addCell('python');
+        alert("New Project Created");
+    }
+
+    function openHistory() {
+        const keyParam = apiKey ? `?key=${apiKey}` : '';
+        window.location.href = `/history${keyParam}`;
+    }
+
+    function saveProject() {
+        const title = $('#nb-title').val();
+        const cells = [];
+        for(let id in editors) cells.push({ code: editors[id].getValue(), language: $(`#${id} .lang-tag`).text().toLowerCase() });
+        
+        // Payload includes ID if we are editing an existing project
+        const payload = { title, cells };
+        if(loadId) payload.id = loadId;
+
+        $.ajax({
+            url: '/save', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: (res) => {
+                loadId = res.id; // Update ID in case this was a new save
+                alert(`Project Saved! ID: ${res.id}`);
+            }
+        });
+    }
+
+    // --- FILES & EDIT/DELETE ---
+    function loadFiles(path = "") {
+        currentPath = path;
+        $('#current-path-display').text(path || "/");
+        if(path) $('#file-back-btn').removeClass('hidden'); else $('#file-back-btn').addClass('hidden');
+        $.get(`/files/list?path=${path}`, (files) => {
+            if(files.error) return;
+            const html = files.map(f => `
+                <div class="flex items-center justify-between p-2 rounded hover:bg-white/5 group">
+                    <div class="flex items-center gap-2 cursor-pointer flex-1" onclick="${f.is_dir ? `loadFiles('${f.path}')` : `openFile('${f.path}')`}">
+                        <span class="text-xs opacity-70">${f.is_dir?'📁':'📄'}</span>
+                        <span class="text-xs ${f.is_dir?'text-white':'text-gray-400'} group-hover:text-white truncate">${f.name}</span>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="renameFile('${f.path}', '${f.name}')" title="Rename" class="text-gray-500 hover:text-white"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                        <button onclick="deleteFile('${f.path}')" title="Delete" class="text-gray-500 hover:text-n-red"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </div>
+                </div>`).join('');
+            $('#file-list').html(html || '<span class="text-xs text-gray-600">Empty</span>');
+        });
+    }
+
+    function deleteFile(path) {
+        if(!confirm(`Delete ${path}?`)) return;
+        $.ajax({ url: '/files/delete', type: 'POST', contentType: 'application/json', data: JSON.stringify({path}), success: () => loadFiles(currentPath) });
+    }
+
+    function renameFile(oldPath, oldName) {
+        const newName = prompt("New Name:", oldName);
+        if(!newName || newName === oldName) return;
+        $.ajax({ url: '/files/rename', type: 'POST', contentType: 'application/json', data: JSON.stringify({old_path: oldPath, new_name: newName}), success: () => loadFiles(currentPath), error: (e) => alert(e.responseJSON.error) });
+    }
+
+    function goUpDir() { if(!currentPath) return; loadFiles(currentPath.split('/').slice(0,-1).join('/')); }
+    function openFile(path) {
+        $.get(`/files/read?path=${path}`, (data) => {
+            if(data.error) return alert(data.error);
+            let lang = 'python'; if(path.endsWith('.html')||path.endsWith('.svg')) lang='html'; if(path.endsWith('.md')) lang='markdown';
+            addCell(lang, data.content);
+            $('#sidebar').addClass('-translate-x-full'); $('#drawer-overlay').addClass('hidden opacity-0');
+        });
+    }
+
+    // --- CELL LOGIC ---
+    function addCell(lang, content=null) {
+        cellCount++;
+        const id = `cell-${cellCount}`;
+        let badgeColor = "bg-blue-500/20 text-blue-300";
+        if(lang === 'html') badgeColor = "bg-orange-500/20 text-orange-300";
+        if(lang === 'markdown') badgeColor = "bg-purple-500/20 text-purple-300";
+        const html = `
+        <div id="${id}" class="glass-panel rounded-[20px] p-1 group border border-white/5 transition-all w-full relative mb-4">
+            <div class="flex justify-between items-center px-4 py-2 bg-black/20 rounded-t-[16px]">
+                <div class="flex gap-2 items-center">
+                    <span class="lang-tag font-nothing text-[10px] ${badgeColor} px-2 py-0.5 rounded uppercase tracking-wider border border-white/5">${lang}</span>
+                    <span class="status font-mono text-[10px] text-gray-500">READY</span>
+                </div>
+                <div class="flex gap-3">
+                    <button class="text-white hover:text-green-400 px-2 py-1 rounded bg-white/5 text-[10px] font-bold" onclick="runCell('${id}', '${lang}')">${lang === 'python' ? '▶ RUN' : '👁 PREVIEW'}</button>
+                    <button class="text-gray-500 hover:text-n-red" onclick="$('#${id}').remove()">✕</button>
+                </div>
+            </div>
+            <div class="px-2 pt-2"><textarea class="code-area w-full"></textarea></div>
+            <div class="hidden bg-black/40 rounded-b-[16px] p-4 border-t border-white/5 result-container">
+                <pre class="output font-mono text-xs text-gray-300 whitespace-pre-wrap break-words overflow-x-auto ${lang !== 'python' ? 'hidden' : ''}"></pre>
+                <div class="plot-output hidden mt-2"></div>
+                <div class="preview-area w-full h-auto ${lang === 'python' ? 'hidden' : ''}"></div>
+            </div>
+        </div>`;
+        $('#notebook-container').append(html);
+        let mode = 'python'; if(lang === 'html') mode='htmlmixed'; if(lang === 'markdown') mode='markdown';
+        const cm = CodeMirror.fromTextArea($(`#${id} .code-area`)[0], { mode: mode, theme: 'material-palenight', lineNumbers: true, viewportMargin: Infinity, indentUnit: 4, extraKeys: {"Ctrl-Space": "autocomplete"} });
+        if(content) cm.setValue(content); else { if(lang==='python') cm.setValue('print("Hello")'); if(lang==='html') cm.setValue('<h3>Hello</h3>'); if(lang==='markdown') cm.setValue('### Markdown'); }
+        editors[id] = cm;
+        $('#plus-menu').addClass('hidden'); $('#mobile-fab-menu').addClass('hidden'); $('#fab-plus').removeClass('rotate-45');
+    }
+
+    function runCell(id, lang) {
+        const code = editors[id].getValue();
+        const $cell = $(`#${id}`);
+        $cell.find('.result-container').removeClass('hidden');
+        if (lang === 'python') {
+            $cell.find('.status').text('RUN...').addClass('text-yellow-500'); $cell.find('.plot-output').empty().addClass('hidden');
+            socket.emit('execute_code', { cell_id: id, language: lang, code: code });
+        } else if (lang === 'html') {
+            $cell.find('.preview-area').html(code); $cell.find('.status').text('RENDERED').addClass('text-green-500');
+        } else if (lang === 'markdown') {
+            $cell.find('.preview-area').html(marked.parse(code)).addClass('prose prose-invert prose-sm max-w-none'); $cell.find('.status').text('RENDERED').addClass('text-green-500');
+        }
+    }
+
+    // --- STANDARD FUNCS ---
+    function initTerminal() { if(term) return; term = new Terminal({theme:{background:'#000000'},fontFamily:'Fira Code',fontSize:12,cursorBlink:true,rows:20}); fitAddon=new FitAddon.FitAddon(); term.loadAddon(fitAddon); term.open(document.getElementById('terminal-container')); fitAddon.fit(); term.onData(d=>socket.emit('terminal_input',{input:d})); socket.on('terminal_output',d=>term.write(d.output)); }
+    function switchTab(t) { $('.tab-btn').removeClass('active border-b-2 border-n-red text-white').addClass('text-gray-500'); $(`.tab-btn:contains(${t.toUpperCase()})`).addClass('active border-b-2 border-n-red text-white').removeClass('text-gray-500'); $('#tab-files, #tab-vars, #tab-git, #tab-term').addClass('hidden'); $(`#tab-${t}`).removeClass('hidden'); if(t==='files') loadFiles(currentPath); if(t==='vars') loadVars(); if(t==='term') { initTerminal(); setTimeout(()=>fitAddon&&fitAddon.fit(),100); } }
+    function updateSystemStats() { $.get('/system/stats', (d) => { setOnline(true); const rP=d.ram.percent||0; const dP=d.disk.percent||0; $('#ram-bar').css('width',rP+'%'); $('#disk-bar').css('width',dP+'%'); $('#ram-text').text(`${d.ram.used}/${d.ram.total} GB`); $('#mobile-ram-text').text(`RAM: ${rP}%`); }).fail(()=>setOnline(false)); }
+    function setOnline(o) { const d=$('#status-dot-desktop, #status-dot-mobile'); const t=$('#conn-text'); if(o){d.removeClass('bg-n-red').addClass('bg-green-500 animate-pulse');t.text('CONNECTED').addClass('text-green-500');}else{d.removeClass('bg-green-500').addClass('bg-n-red');t.text('OFFLINE').addClass('text-n-red');} }
+    function loadVars() { $.get('/variables', v => $('#var-list').html(v.map(i=>`<div class="p-2 border border-white/5 rounded bg-black/20 text-[10px]"><span class="text-n-red font-mono">${i.name}</span> <span class="text-gray-500">${i.type}</span><div class="text-white truncate">${i.value}</div></div>`).join(''))); }
+    function cloneRepo() { const u=$('#repo-url').val(); if(u) $.ajax({url:'/git/clone',type:'POST',contentType:'application/json',data:JSON.stringify({url:u}),success:r=>{alert(r.status);loadFiles();}}); }
+    function restartKernel() { if(confirm('Restart?')) $.post('/kernel/restart',()=>alert('Restarted')); }
+    function downloadJSON() { const c=[]; for(let i in editors) c.push({code:editors[i].getValue(),language:$(`#${i} .lang-tag`).text().toLowerCase()}); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify({cells:c},null,2)],{type:"application/json"})); a.download="project.npy"; a.click(); }
+    setInterval(updateSystemStats,2000); socket.on('connect',()=>updateSystemStats()); socket.on('disconnect',()=>setOnline(false)); socket.on('execution_result',d=>{const c=$(`#${d.cell_id}`); if(d.output.includes('NBOOK_IMG:')){c.find('.plot-output').html(`<img src="data:image/png;base64,${d.output.split('NBOOK_IMG:')[1].trim()}" class="rounded-lg mt-2">`).removeClass('hidden'); c.find('.output').addClass('hidden');}else{c.find('.output').text(d.output).parent().removeClass('hidden');} c.find('.status').text('DONE').addClass('text-green-500');});
+    $(document).click(e=>{if(!$(e.target).closest('#plus-menu, button[onclick="togglePlusMenu()"]').length)$('#plus-menu').addClass('hidden');}); $('#mobile-menu-btn, #drawer-overlay').click(()=>{ $('#sidebar').toggleClass('-translate-x-full'); $('#drawer-overlay').toggleClass('hidden opacity-0'); });
+    function togglePlusMenu() {$('#plus-menu').toggleClass('hidden');} function toggleMobileFab() {$('#mobile-fab-menu').toggleClass('hidden');$('#fab-plus').toggleClass('rotate-45');}
+</script>
+{% endblock %}

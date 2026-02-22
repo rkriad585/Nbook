@@ -1,5 +1,8 @@
 # Nbook
 
+![Logo](https://github.com/rkriad585/Nbook/blob/main/static/images/logo.svg)
+
+
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Language](https://img.shields.io/badge/Language-Python-blue.svg)
 ![Version](https://img.shields.io/badge/Version-0.1.0-orange.svg)

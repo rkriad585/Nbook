@@ -1,110 +1,153 @@
 # Nbook Configuration
 
-Nbook's configuration is managed through the `config.py` file, which defines essential settings for the Flask application, database, workspace, and operational modes.
+Nbook uses `config.py` for application configuration, with support for environment variables via `python-dotenv`.
 
-## `config.py`
+## config.py
 
 ```python
 import os
+from dotenv import load_dotenv
 
-# Base directory of the application
+load_dotenv()
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-
-# Directory for application data (e.g., database)
 DATA_DIR = os.path.join(BASE_DIR, 'data')
-
-# Directory for user workspace (file explorer, cloned repos)
 WORKSPACE_DIR = os.path.join(BASE_DIR, 'workspace')
-
-# Path to the SQLite database file
 DB_PATH = os.path.join(DATA_DIR, 'nbook.db')
 
-# Ensure data and workspace directories exist
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(WORKSPACE_DIR, exist_ok=True)
 
 class Config:
-    """
-    Main configuration class for the Flask application.
-    """
-    # Flask Secret Key: Used for session management and security.
-    # It's highly recommended to set this via an environment variable in production.
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'nbook-secret-key'
-
-    # SQLAlchemy Database URI: Specifies the database connection string.
-    # Nbook uses SQLite for simplicity.
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'nbook-secret-key')
     SQLALCHEMY_DATABASE_URI = f'sqlite:///{DB_PATH}'
-
-    # SQLALCHEMY_TRACK_MODIFICATIONS: Disables tracking object modifications
-    # to save memory, as it's not needed for Nbook's current use case.
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # WORKSPACE: Path to the directory where user files and projects are stored.
     WORKSPACE = WORKSPACE_DIR
-
-    # NBOOK_MODE: Defines the operational mode of Nbook ('free' or 'secure').
-    # This is set dynamically by the CLI commands.
-    NBOOK_MODE = 'free'
-
-    # NBOOK_API_KEY: Stores the API key when Nbook is running in 'secure' mode.
-    # This is generated at runtime.
+    NBOOK_MODE = os.environ.get('NBOOK_MODE', 'free')
     NBOOK_API_KEY = None
+    NBOOK_PORT = int(os.environ.get('NBOOK_PORT', 52896))
+    MAX_CONTENT_LENGTH = 50 * 1024 * 1024
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_HTTPONLY = True
 ```
 
-## Key Configuration Parameters
+## Configuration Reference
 
-### 1. Directory Paths
+### Directory Paths
 
-*   **`BASE_DIR`**: The absolute path to the directory where `config.py` resides. This serves as the root for other relative paths.
-*   **`DATA_DIR`**: A subdirectory within `BASE_DIR` (e.g., `Nbook/data`) used to store application-specific data, primarily the SQLite database.
-    *   Automatically created if it doesn't exist (`os.makedirs(DATA_DIR, exist_ok=True)`).
-*   **`WORKSPACE_DIR`**: A subdirectory within `BASE_DIR` (e.g., `Nbook/workspace`) designated as the root for the file explorer and where Git repositories are cloned.
-    *   Automatically created if it doesn't exist (`os.makedirs(WORKSPACE_DIR, exist_ok=True)`).
-*   **`DB_PATH`**: The full path to the SQLite database file (`nbook.db`) located inside `DATA_DIR`.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `BASE_DIR` | `app root` | Absolute path to the application root |
+| `DATA_DIR` | `{BASE_DIR}/data` | Stores the SQLite database file |
+| `WORKSPACE_DIR` | `{BASE_DIR}/workspace` | Root for file explorer and git clones |
+| `DB_PATH` | `{DATA_DIR}/nbook.db` | Full path to the SQLite database |
 
-### 2. Flask Application Settings (`Config` class)
+Both `data/` and `workspace/` directories are created automatically on startup.
 
-*   **`SECRET_KEY`**:
-    *   **Purpose**: Essential for cryptographic operations in Flask, such as signing session cookies.
-    *   **Value**: Defaults to `'nbook-secret-key'` if the `SECRET_KEY` environment variable is not set.
-    *   **Recommendation**: For any deployment beyond local development, it is crucial to set this to a strong, randomly generated value via an environment variable (e.g., `export SECRET_KEY='your_very_secret_key_here'`) to prevent security vulnerabilities.
-*   **`SQLALCHEMY_DATABASE_URI`**:
-    *   **Purpose**: Configures the database connection for Flask-SQLAlchemy.
-    *   **Value**: `sqlite:///{DB_PATH}` points to the SQLite database file.
-    *   **Customization**: While Nbook currently uses SQLite, this setting could be modified to connect to other databases (e.g., PostgreSQL, MySQL) if the necessary drivers and schema migrations were implemented.
-*   **`SQLALCHEMY_TRACK_MODIFICATIONS`**:
-    *   **Purpose**: Controls whether Flask-SQLAlchemy tracks modifications of objects and emits signals.
-    *   **Value**: Set to `False` to conserve resources, as Nbook does not rely on these signals.
-*   **`WORKSPACE`**:
-    *   **Purpose**: Specifies the root directory for all file system operations exposed through the Nbook interface.
-    *   **Value**: Set to `WORKSPACE_DIR`.
-*   **`NBOOK_MODE`**:
-    *   **Purpose**: Determines the operational security mode of the Nbook instance.
-    *   **Value**: Can be `'free'` or `'secure'`. It is initially `'free'` but is dynamically updated by the CLI commands (`python app.py start` sets it to `'secure'`, `python app.py free` sets it to `'free'`).
-*   **`NBOOK_API_KEY`**:
-    *   **Purpose**: Stores the unique API key generated when Nbook runs in `secure` mode.
-    *   **Value**: `None` by default. When `python app.py start` is executed, a UUID is generated and assigned here. This key is then required for all authenticated access.
+### Flask Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `SECRET_KEY` | `nbook-secret-key` | Used for session signing. **Override in production!** |
+| `SQLALCHEMY_DATABASE_URI` | `sqlite:///{DB_PATH}` | Database connection string |
+| `SQLALCHEMY_TRACK_MODIFICATIONS` | `False` | Disables object tracking (saves memory) |
+| `MAX_CONTENT_LENGTH` | `52,428,800` (50MB) | Maximum file upload size |
+| `SESSION_COOKIE_SAMESITE` | `Lax` | CSRF protection for session cookies |
+| `SESSION_COOKIE_HTTPONLY` | `True` | Prevents JS access to session cookies |
+
+### Nbook Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `NBOOK_MODE` | `free` | Operation mode: `free` or `secure` |
+| `NBOOK_API_KEY` | `None` | API key for secure mode (auto-generated) |
+| `NBOOK_PORT` | `52896` | Server port (configurable via env) |
+
+### Workspace
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `WORKSPACE` | `{BASE_DIR}/workspace` | Root directory for all file operations |
 
 ## Environment Variables
 
-While `SECRET_KEY` is the only configuration explicitly checking for an environment variable, it's a best practice to manage sensitive or deployment-specific settings outside of the codebase.
+Create a `.env` file in the project root:
 
-To set the `SECRET_KEY` environment variable (e.g., on Linux/macOS):
+```env
+# Flask secret key (REQUIRED for production)
+SECRET_KEY=your-strong-random-secret-here
+
+# Server port (default: 52896)
+NBOOK_PORT=52896
+
+# Operation mode (free or secure)
+NBOOK_MODE=free
+```
+
+Nbook loads `.env` automatically via `python-dotenv`. A template is provided at `.env.example`.
+
+## Database
+
+Nbook uses SQLite by default (`data/nbook.db`). The schema is auto-created on startup via `db.create_all()`. The database contains two tables: `user` and `notebook`.
+
+To reset the database (development only):
 ```bash
-export SECRET_KEY="your_long_and_random_secret_key_here"
-python app.py start # or free
-```
-On Windows (Command Prompt):
-```cmd
-set SECRET_KEY="your_long_and_random_secret_key_here"
-python app.py start
-```
-On Windows (PowerShell):
-```powershell
-$env:SECRET_KEY="your_long_and_random_secret_key_here"
-python app.py start
+# Delete the database file
+rm data/nbook.db   # Linux/macOS
+del data\nbook.db  # Windows
+
+# Restart the server (tables recreated automatically)
+python app.py free
 ```
 
-Understanding and managing these configuration parameters is crucial for deploying and customizing your Nbook instance effectively.
+## Changing the Port
 
-written by Neorwc
+```bash
+# Via environment variable
+export NBOOK_PORT=8080   # Linux/macOS
+$env:NBOOK_PORT=8080    # PowerShell
+set NBOOK_PORT=8080     # Windows CMD
+
+# Via .env file
+echo "NBOOK_PORT=8080" >> .env
+```
+
+## Using a Different Database
+
+While Nbook defaults to SQLite, you can use any SQLAlchemy-supported database:
+
+```python
+# config.py (example for PostgreSQL)
+import os
+SQLALCHEMY_DATABASE_URI = os.environ.get(
+    'DATABASE_URL',
+    'postgresql://user:pass@localhost/nbook'
+)
+```
+
+## Production Deployment
+
+For production:
+
+1. **Set a strong SECRET_KEY** — Use a random generator:
+   ```python
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+
+2. **Use secure mode** — Run with API key protection:
+   ```bash
+   python app.py start
+   ```
+
+3. **Use a production WSGI server** — Gunicorn (Linux) or Waitress (Windows):
+   ```bash
+   pip install gunicorn  # Linux
+   gunicorn -w 4 'app:create_app()' -b 0.0.0.0:52896
+   
+   pip install waitress  # Windows
+   waitress-serve --port=52896 'app:create_app()'
+   ```
+
+4. **Use Redis for rate limiting** — Flask-Limiter shows a warning about in-memory storage; configure Redis for multi-process deployments.
+
+5. **Configure HTTPS** — Use a reverse proxy (Nginx, Caddy) for TLS termination.

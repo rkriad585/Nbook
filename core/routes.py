@@ -145,19 +145,31 @@ def rename_file():
         return jsonify({"status": "success"})
     except Exception as e: return jsonify({"error": str(e)}), 500
 
+BLOCKED_EXTENSIONS = {'.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.pif', '.sh', '.pyc', '.dll', '.so', '.dylib', '.vbs', '.ps1', '.app'}
+
+def _safe_filename(name):
+    name = os.path.basename(name)
+    ext = os.path.splitext(name)[1].lower()
+    if ext in BLOCKED_EXTENSIONS:
+        return None
+    return name
+
 @main_bp.route('/files/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return jsonify({"error": "No file provided"}), 400
     file = request.files['file']
+    safe_name = _safe_filename(file.filename)
+    if not safe_name:
+        return jsonify({"error": "File type not allowed"}), 400
     dest = request.form.get('path', '')
     target_dir = get_safe_path(dest)
     if not target_dir or not os.path.isdir(target_dir):
         return jsonify({"error": "Invalid directory"}), 400
     try:
-        filepath = os.path.join(target_dir, file.filename)
+        filepath = os.path.join(target_dir, safe_name)
         file.save(filepath)
-        return jsonify({"status": "success", "path": os.path.join(dest, file.filename).replace('\\', '/')})
+        return jsonify({"status": "success", "path": os.path.join(dest, safe_name).replace('\\', '/')})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

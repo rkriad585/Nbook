@@ -36,7 +36,7 @@ def register_middleware(state):
             if key != current_app.config.get('NBOOK_API_KEY'):
                 if request.is_json or request.path.startswith('/files') or request.path.startswith('/system'): 
                     abort(403)
-                return render_template('error.html'), 403
+                return render_template('error.html', code=403, message="ACCESS DENIED", detail="INVALID_API_KEY"), 403
 
 def get_safe_path(req_path):
     workspace = os.path.abspath(current_app.config['WORKSPACE'])

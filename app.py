@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, render_template, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from config import Config
@@ -30,6 +30,17 @@ def create_app():
 
     # Register Routes
     app.register_blueprint(main_bp)
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(e):
+        if request.path.startswith('/api') or request.is_json:
+            return jsonify({"error": "Not found"}), 404
+        return render_template('error.html', code=404, message="PAGE NOT FOUND", detail="The requested resource does not exist."), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        return render_template('error.html', code=500, message="SERVER ERROR", detail="An internal error occurred. Check the server logs."), 500
 
     return app
 

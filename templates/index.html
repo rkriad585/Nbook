@@ -98,8 +98,12 @@
 <main class="flex-1 flex flex-col h-[calc(100vh-3.5rem)] md:h-screen w-full relative">
     <!-- Desktop Header -->
     <div class="hidden md:flex items-center justify-between p-6">
-        <div class="flex-1">
-             <input type="text" id="nb-title" value="Untitled Research" class="bg-transparent text-xl font-bold focus:outline-none w-full font-sans placeholder-gray-600">
+        <div class="flex-1 flex items-center gap-4">
+             <input type="text" id="nb-title" value="Untitled Research" class="bg-transparent text-xl font-bold focus:outline-none font-sans placeholder-gray-600 max-w-xs">
+             <div class="relative flex-1 max-w-xs">
+                 <input type="text" id="search-cell" placeholder="Search cells..." class="w-full bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50">
+                 <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+             </div>
         </div>
         
         <div class="flex items-center gap-6">
@@ -171,6 +175,17 @@
     let term = null; let fitAddon = null;
     let currentTheme = localStorage.getItem('nbook-theme') || 'dark';
 
+    // --- CELL SEARCH ---
+    $(document).on('input', '#search-cell', function() {
+        const q = $(this).val().toLowerCase();
+        $('.glass-panel[id^="cell-"]').each(function() {
+            const id = $(this).attr('id');
+            const code = editors[id] ? editors[id].getValue().toLowerCase() : '';
+            const lang = $(this).find('.lang-tag').text().toLowerCase();
+            $(this).toggle(code.includes(q) || lang.includes(q));
+        });
+    });
+
     // --- THEME TOGGLE ---
     function toggleTheme() {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -235,6 +250,10 @@
             addCell('python');
         }
         loadFiles();
+        // Auto-save every 30 seconds if there are cells
+        setInterval(() => {
+            if(Object.keys(editors).length > 0) saveProject(true);
+        }, 30000);
     });
 
     // --- PROJECT ACTIONS ---
@@ -253,7 +272,7 @@
         window.location.href = `/history${keyParam}`;
     }
 
-    function saveProject() {
+    function saveProject(silent) {
         const title = $('#nb-title').val();
         const cells = [];
         for(let id in editors) cells.push({ code: editors[id].getValue(), language: $(`#${id} .lang-tag`).text().toLowerCase() });
@@ -264,7 +283,7 @@
             data: JSON.stringify(payload),
             success: (res) => {
                 loadId = res.id;
-                alert(`Project Saved! ID: ${res.id}`);
+                if(!silent) alert(`Project Saved! ID: ${res.id}`);
             }
         });
     }

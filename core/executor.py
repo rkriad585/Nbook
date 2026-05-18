@@ -22,10 +22,16 @@ def get_variables():
     return vars_list
 
 def run_python_stateful(code_str):
-    _cancel_flag.clear()
     buffer = io.StringIO()
     original_stdout = sys.stdout
     sys.stdout = buffer
+
+    # Check for cancellation before proceeding
+    if _cancel_flag.is_set():
+        _cancel_flag.clear()
+        sys.stdout = original_stdout
+        return {"output": "Cancelled", "status": "cancelled"}
+    _cancel_flag.clear()
 
     # Plotting Support Injection
     plot_patch = """
@@ -44,10 +50,6 @@ plt.show = _nbook_show
         # Inject plot patch on first matplotlib usage
         if ("import matplotlib" in code_str or "from matplotlib" in code_str) and "_nbook_show" not in PYTHON_GLOBALS:
             exec(plot_patch, PYTHON_GLOBALS)
-
-        # Check for cancellation before execution
-        if _cancel_flag.is_set():
-            return {"output": "Cancelled", "status": "cancelled"}
 
         # Magic Commands
         if code_str.strip().startswith('!'):

@@ -74,21 +74,13 @@
         .CodeMirror-gutters { background: transparent !important; border: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Sidebar collapsed */
-        #sidebar.collapsed > .p-4 { gap: 0; }
-        #sidebar.collapsed #sidebar-title,
-        #sidebar.collapsed #auth-info,
-        #sidebar.collapsed #sidebar-nav-row,
-        #sidebar.collapsed .tab-btn,
-        #sidebar.collapsed #tab-files,
-        #sidebar.collapsed #tab-term,
-        #sidebar.collapsed #tab-vars,
-        #sidebar.collapsed #tab-git,
-        #sidebar.collapsed .pt-2,
-        #sidebar.collapsed .mb-2 { display: none !important; }
-        #sidebar.collapsed #sidebar-collapse-btn { margin: 0 auto; }
-        #sidebar.collapsed #sidebar-bottom { display: none !important; }
-        #sidebar.collapsed .flex.justify-between { justify-content: center; }
+        /* Sidebar collapsed (desktop only) */
+        @media (min-width: 768px) {
+            #sidebar.collapsed { width: 44px !important; min-width: 44px !important; overflow: hidden !important; }
+            #sidebar.collapsed .sidebar-hide-when-collapsed { display: none !important; }
+            #sidebar.collapsed #sidebar-collapse-btn { margin: 0; }
+            #sidebar.collapsed #sidebar-header { justify-content: center; padding: 12px 0 !important; }
+        }
 
         /* Responsive */
         @media (max-width: 768px) {

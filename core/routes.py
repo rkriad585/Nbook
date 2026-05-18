@@ -145,6 +145,19 @@ def rename_file():
         return jsonify({"status": "success"})
     except Exception as e: return jsonify({"error": str(e)}), 500
 
+@main_bp.route('/save-file', methods=['POST'])
+def save_file_content():
+    path = request.json.get('path')
+    content = request.json.get('content', '')
+    target = get_safe_path(path)
+    if not target: return jsonify({"error": "Invalid path"}), 400
+    try:
+        with open(target, 'w', encoding='utf-8') as f:
+            f.write(content)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 BLOCKED_EXTENSIONS = {'.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.pif', '.sh', '.pyc', '.dll', '.so', '.dylib', '.vbs', '.ps1', '.app'}
 
 def _safe_filename(name):

@@ -424,6 +424,46 @@
         _fileEditorPath = null;
     }
 
+    // --- DRAG AND DROP CELLS ---
+    let _dragSrcId = null;
+    $(document).on('dragstart', '.drag-handle', function(e) {
+        _dragSrcId = $(this).closest('.glass-panel').attr('id');
+        e.originalEvent.dataTransfer.effectAllowed = 'move';
+        $(this).closest('.glass-panel').css('opacity', '0.4');
+    });
+    $(document).on('dragend', '.drag-handle', function(e) {
+        $(this).closest('.glass-panel').css('opacity', '1');
+        _dragSrcId = null;
+        $('.glass-panel').removeClass('border-blue-500/50');
+    });
+    $(document).on('dragover', '#notebook-container', function(e) {
+        e.preventDefault();
+        e.originalEvent.dataTransfer.dropEffect = 'move';
+        const target = $(e.target).closest('.glass-panel');
+        if(target.length) {
+            $('.glass-panel').removeClass('border-blue-500/50');
+            target.addClass('border-blue-500/50');
+        }
+    });
+    $(document).on('dragleave', '.glass-panel', function() {
+        $(this).removeClass('border-blue-500/50');
+    });
+    $(document).on('drop', '#notebook-container', function(e) {
+        e.preventDefault();
+        $('.glass-panel').removeClass('border-blue-500/50');
+        if(!_dragSrcId) return;
+        const target = $(e.target).closest('.glass-panel');
+        if(!target.length || target.attr('id') === _dragSrcId) return;
+        const $src = $(`#${_dragSrcId}`);
+        const pos = target.index();
+        const srcPos = $src.index();
+        if(srcPos < pos) {
+            target.after($src);
+        } else {
+            target.before($src);
+        }
+    });
+
     // --- CANCELLATION ---
     function cancelExecution() {
         $.post('/kernel/cancel', () => {
@@ -453,9 +493,10 @@
         const badgeColor = langColors[lang] || 'bg-gray-500/20 text-gray-300';
         const runBtnLabel = lang === 'python' ? 'RUN' : (lang === 'bash' ? 'RUN' : 'PREVIEW');
         const html = `
-        <div id="${id}" class="glass-panel rounded-[20px] p-1 group border border-white/5 transition-all w-full relative mb-4">
+        <div id="${id}" class="glass-panel rounded-[20px] p-1 group border border-white/5 transition-all w-full relative mb-4" draggable="false">
             <div class="flex justify-between items-center px-4 py-2 bg-black/20 rounded-t-[16px]">
                 <div class="flex gap-2 items-center">
+                    <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-white transition" draggable="true" title="Drag to reorder"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zM8 11h2v2H8v-2zm6 0h2v2h-2v-2zm-6 5h2v2H8v-2zm6 0h2v2h-2v-2z"/></svg></span>
                     <span class="lang-tag font-nothing text-[10px] ${badgeColor} px-2 py-0.5 rounded uppercase tracking-wider border border-white/5">${lang}</span>
                     <span class="status font-mono text-[10px] text-gray-500">READY</span>
                 </div>

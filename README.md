@@ -6,7 +6,6 @@
 
 **The Glass Interface Notebook** — a stateful, real-time, browser-based interactive notebook built with Flask and Socket.IO.
 
-![Tests](https://github.com/anomalyco/nbook/actions/workflows/tests.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 

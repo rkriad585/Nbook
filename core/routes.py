@@ -12,7 +12,7 @@ from flask_socketio import emit
 from git import Repo
 
 from core import db, socketio, Notebook
-from core.executor import run_python_stateful, get_variables, PYTHON_GLOBALS
+from core.executor import run_python_stateful, get_variables, PYTHON_GLOBALS, cancel_execution
 
 main_bp = Blueprint('main', __name__)
 
@@ -26,15 +26,17 @@ except ImportError:
     HAS_PTY = False
 
 # --- Middleware ---
-@main_bp.before_app_request
-def check_api_key():
-    if request.path.startswith('/static') or request.path.startswith('/socket.io'): return
-    if current_app.config.get('NBOOK_MODE') == 'secure':
-        key = request.args.get('key') or request.headers.get('X-API-KEY')
-        if key != current_app.config.get('NBOOK_API_KEY'):
-            if request.is_json or request.path.startswith('/files') or request.path.startswith('/system'): 
-                abort(403)
-            return render_template('error.html'), 403
+@main_bp.record_once
+def register_middleware(state):
+    @state.app.before_request
+    def check_api_key():
+        if request.path.startswith('/static') or request.path.startswith('/socket.io'): return
+        if current_app.config.get('NBOOK_MODE') == 'secure':
+            key = request.args.get('key') or request.headers.get('X-API-KEY')
+            if key != current_app.config.get('NBOOK_API_KEY'):
+                if request.is_json or request.path.startswith('/files') or request.path.startswith('/system'): 
+                    abort(403)
+                return render_template('error.html'), 403
 
 def get_safe_path(req_path):
     workspace = os.path.abspath(current_app.config['WORKSPACE'])
@@ -46,17 +48,27 @@ def read_and_emit_pty(fd):
     try:
         while True:
             time.sleep(0.01)
-            if fd:
+            if fd is not None:
                 data = os.read(fd, 1024)
-                if data: socketio.emit('terminal_output', {'output': data.decode(errors='ignore')})
+                if not data: break
+                socketio.emit('terminal_output', {'output': data.decode(errors='ignore')})
     except OSError: pass
+    finally:
+        if fd is not None:
+            try: os.close(fd)
+            except: pass
 
 def read_and_emit_pipe(process):
     try:
         while True:
-            output = process.stdout.read(1)
-            if output: socketio.emit('terminal_output', {'output': output.decode(errors='ignore')})
+            if process.poll() is not None: break
+            output = process.stdout.read(1024)
+            if output:
+                socketio.emit('terminal_output', {'output': output.decode(errors='ignore')})
     except: pass
+    finally:
+        try: process.terminate()
+        except: pass
 
 # --- System Stats ---
 @main_bp.route('/system/stats')
@@ -133,6 +145,83 @@ def rename_file():
         return jsonify({"status": "success"})
     except Exception as e: return jsonify({"error": str(e)}), 500
 
+@main_bp.route('/files/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    file = request.files['file']
+    dest = request.form.get('path', '')
+    target_dir = get_safe_path(dest)
+    if not target_dir or not os.path.isdir(target_dir):
+        return jsonify({"error": "Invalid directory"}), 400
+    try:
+        filepath = os.path.join(target_dir, file.filename)
+        file.save(filepath)
+        return jsonify({"status": "success", "path": os.path.join(dest, file.filename).replace('\\', '/')})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@main_bp.route('/files/download')
+def download_file():
+    target = get_safe_path(request.args.get('path', ''))
+    if not target or not os.path.isfile(target):
+        return jsonify({"error": "File not found"}), 404
+    try:
+        with open(target, 'rb') as f:
+            data = f.read()
+        response = make_response(data)
+        response.headers['Content-Disposition'] = f'attachment; filename={os.path.basename(target)}'
+        response.mimetype = 'application/octet-stream'
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@main_bp.route('/files/create', methods=['POST'])
+def create_file():
+    path = request.json.get('path', '')
+    typ = request.json.get('type', 'file')
+    target = get_safe_path(path)
+    if not target:
+        return jsonify({"error": "Invalid path"}), 400
+    try:
+        if typ == 'directory':
+            os.makedirs(target, exist_ok=True)
+        else:
+            if os.path.exists(target):
+                return jsonify({"error": "Already exists"}), 400
+            open(target, 'w').close()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- Export Routes ---
+@main_bp.route('/export/html', methods=['POST'])
+def export_html():
+    data = request.json
+    cells = data.get('cells', [])
+    title = data.get('title', 'Notebook')
+    html_parts = [f'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>{title}</title>']
+    html_parts.append('<style>body{background:#0a0a0a;color:#e5e5e5;font-family:monospace;padding:2rem;max-width:900px;margin:auto}')
+    html_parts.append('pre{background:#1a1a1a;padding:1rem;border-radius:8px;overflow-x:auto}')
+    html_parts.append('hr{border-color:#333;margin:2rem 0}')
+    html_parts.append('</style></head><body>')
+    html_parts.append(f'<h1>{title}</h1>')
+    for c in cells:
+        lang = c.get('language', '')
+        code = c.get('code', '')
+        if lang == 'markdown':
+            html_parts.append(f'<div>{code}</div>')
+        elif lang == 'html':
+            html_parts.append(f'<div>{code}</div>')
+        else:
+            html_parts.append(f'<pre><code>{code}</code></pre>')
+        html_parts.append('<hr>')
+    html_parts.append('</body></html>')
+    response = make_response('\n'.join(html_parts))
+    response.headers['Content-Disposition'] = f'attachment; filename={title}.html'
+    response.mimetype = 'text/html'
+    return response
+
 # --- History Routes ---
 @main_bp.route('/history')
 def history_page():
@@ -182,6 +271,11 @@ def restart_kernel():
     PYTHON_GLOBALS.clear()
     return jsonify({"status": "restarted"})
 
+@main_bp.route('/kernel/cancel', methods=['POST'])
+def cancel_kernel():
+    cancel_execution()
+    return jsonify({"status": "cancelled"})
+
 @main_bp.route('/git/clone', methods=['POST'])
 def git_clone():
     try:
@@ -230,7 +324,8 @@ def on_connect():
             t.daemon = True
             t.start()
     else:
-        TERMINAL_PROC = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=current_app.config['WORKSPACE'], shell=True)
+        shell = 'powershell.exe' if os.system('where pwsh > nul 2>&1') == 0 else 'cmd.exe'
+        TERMINAL_PROC = subprocess.Popen([shell], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=current_app.config['WORKSPACE'], shell=True)
         t = threading.Thread(target=read_and_emit_pipe, args=(TERMINAL_PROC,))
         t.daemon = True
         t.start()

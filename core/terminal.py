@@ -8,15 +8,17 @@ def run_server_secure(app):
     api_key = str(uuid.uuid4())
     app.config['NBOOK_MODE'] = 'secure'
     app.config['NBOOK_API_KEY'] = api_key
-    print(f"\n🔒 SECURE MODE: http://127.0.0.1:5000?key={api_key}\n")
+    port = int(os.environ.get('NBOOK_PORT', 52896))
+    print(f"\n[SECURE MODE] http://127.0.0.1:{port}?key={api_key}\n")
     with app.app_context(): db.create_all()
-    socketio.run(app, debug=True, port=5000, host='0.0.0.0', use_reloader=False)
+    socketio.run(app, debug=True, port=port, host='0.0.0.0', use_reloader=False)
 
 def run_server_free(app):
     app.config['NBOOK_MODE'] = 'free'
-    print(f"\n🔓 FREE MODE: http://127.0.0.1:5000\n")
+    port = int(os.environ.get('NBOOK_PORT', 52896))
+    print(f"\n[FREE MODE] http://127.0.0.1:{port}\n")
     with app.app_context(): db.create_all()
-    socketio.run(app, debug=True, port=5000, host='0.0.0.0', use_reloader=False)
+    socketio.run(app, debug=True, port=port, host='0.0.0.0', use_reloader=False)
 
 def convert_notebook(filename):
     if not os.path.exists(filename): return False, "File not found"

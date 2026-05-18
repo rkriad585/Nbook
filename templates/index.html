@@ -210,7 +210,6 @@
     let currentTheme = localStorage.getItem('nbook-theme') || 'dark';
     let cmTheme = localStorage.getItem('nbook-cm-theme') || '';
     let collabRoom = null;
-    let collabActive = true;
     let isCollabEdit = false;
 
     // --- CELL SEARCH ---
@@ -233,13 +232,10 @@
 
     function applySidebarState() {
         const $sidebar = $('#sidebar');
-        const $main = $('main');
         if(sidebarCollapsed) {
-            $sidebar.css({'width': '0px', 'min-width': '0px', 'overflow': 'hidden', 'padding': '0', 'border': 'none'});
-            $main.css('margin-left', '0');
+            $sidebar.css({'width': '0px', 'min-width': '0px', 'overflow': 'hidden', 'padding': '0', 'border': 'none', 'margin-right': '0'});
         } else {
-            $sidebar.css({'width': '', 'min-width': '', 'overflow': '', 'padding': '', 'border': ''});
-            $main.css('margin-left', '');
+            $sidebar.css({'width': '', 'min-width': '', 'overflow': '', 'padding': '', 'border': '', 'margin-right': ''});
         }
     }
 
@@ -260,22 +256,6 @@
         const activeCMTheme = cmTheme || (isDark ? 'material-palenight' : 'default');
         for(let id in editors) {
             editors[id].setOption('theme', activeCMTheme);
-        }
-    }
-
-    function applyTheme() {
-        const isDark = currentTheme === 'dark';
-        $('html').attr('class', isDark ? 'dark' : '');
-        const bg = isDark ? '#0a0a0a' : '#ffffff';
-        const fg = isDark ? '#e5e5e5' : '#1a1a1a';
-        document.body.style.backgroundColor = bg;
-        document.body.style.color = fg;
-        $('#theme-toggle-btn').text(isDark ? 'DARK MODE' : 'LIGHT MODE');
-        for(let id in editors) {
-            const cellTheme = $(`#${id}`).attr('data-theme');
-            if(!cellTheme) {
-                editors[id].setOption('theme', isDark ? 'material-palenight' : 'default');
-            }
         }
     }
 

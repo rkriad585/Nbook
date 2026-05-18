@@ -1,3 +1,7 @@
+<div align="center">
+
+<img src="static/images/logo.svg" alt="NBooK Logo" width="120" height="120" />
+
 # N-BOOK
 
 **The Glass Interface Notebook** — a stateful, real-time, browser-based interactive notebook built with Flask and Socket.IO.
@@ -5,6 +9,8 @@
 ![Tests](https://github.com/anomalyco/nbook/actions/workflows/tests.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+</div>
 
 ---
 
@@ -458,4 +464,4 @@ Please ensure your code follows the existing style conventions (no comments, con
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-Copyright (c) 2025 RK RIAD 585 (RK STUDIO 585)
+Copyright (c) 2025 RK RIAD 585

@@ -8,7 +8,7 @@ import subprocess
 import time
 import shutil
 from flask import Blueprint, render_template, request, jsonify, abort, current_app, make_response
-from flask_socketio import emit
+from flask_socketio import emit, join_room, leave_room
 from git import Repo
 
 from core import db, socketio, Notebook
@@ -249,38 +249,48 @@ def export_html():
 
 @main_bp.route('/export/pdf', methods=['POST'])
 def export_pdf():
+    from fpdf import FPDF
     data = request.json
     cells = data.get('cells', [])
     title = data.get('title', 'Notebook')
-    html_parts = [f'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>{title}</title>']
-    html_parts.append('<style>body{background:#fff;color:#1a1a1a;font-family:monospace;padding:2rem;max-width:900px;margin:auto}')
-    html_parts.append('h1{font-size:1.5em;margin-bottom:1rem}')
-    html_parts.append('pre{background:#f5f5f5;padding:1rem;border-radius:4px;overflow-x:auto;white-space:pre-wrap}')
-    html_parts.append('hr{border-color:#ddd;margin:1.5rem 0}')
-    html_parts.append('@media print{body{padding:0}}')
-    html_parts.append('</style></head><body>')
-    html_parts.append(f'<h1>{title}</h1>')
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font('Courier', 'B', 16)
+    pdf.cell(0, 10, title[:60], new_x='LMARGIN', new_y='NEXT')
+    pdf.ln(4)
     for c in cells:
-        lang = c.get('language', '')
+        lang = c.get('language', 'python')
         code = c.get('code', '')
-        if lang == 'markdown':
-            html_parts.append(f'<div>{code}</div>')
-        elif lang == 'html':
-            html_parts.append(f'<div>{code}</div>')
-        else:
-            html_parts.append(f'<pre><code>{code}</code></pre>')
-        html_parts.append('<hr>')
-    html_parts.append('</body></html>')
-    html_str = '\n'.join(html_parts)
-    try:
-        import weasyprint
-        pdf = weasyprint.HTML(string=html_str).write_pdf()
-        response = make_response(pdf)
-        response.headers['Content-Disposition'] = f'attachment; filename={title}.pdf'
-        response.mimetype = 'application/pdf'
-        return response
-    except ImportError:
-        return jsonify({"error": "PDF export requires weasyprint: pip install weasyprint"}), 400
+        pdf.set_font('Courier', 'B', 10)
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(0, 6, f'[{lang.upper()}]', new_x='LMARGIN', new_y='NEXT')
+        pdf.set_text_color(200, 200, 200)
+        pdf.set_font('Courier', '', 8)
+        for line in code.split('\n'):
+            line = line.encode('latin-1', 'replace').decode('latin-1')
+            try:
+                pdf.cell(0, 4, line[:100], new_x='LMARGIN', new_y='NEXT')
+            except:
+                pass
+        pdf.ln(2)
+        pdf.set_draw_color(50, 50, 50)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(4)
+    response = make_response(pdf.output())
+    response.headers['Content-Disposition'] = f'attachment; filename={title}.pdf'
+    response.mimetype = 'application/pdf'
+    return response
+
+@main_bp.route('/settings')
+def settings_page():
+    notebooks = Notebook.query.order_by(Notebook.id.desc()).all()
+    return render_template('settings.html', notebooks=notebooks)
+
+@main_bp.route('/system/restart', methods=['POST'])
+def system_restart():
+    PYTHON_GLOBALS.clear()
+    cancel_execution()
+    return jsonify({"status": "restarted"})
 
 # --- History Routes ---
 @main_bp.route('/history')
@@ -409,3 +419,39 @@ def handle_execution(data):
     if lang == 'python': result = run_python_stateful(data.get('code'))
     else: result = {"output": "", "status": "success"} 
     emit('execution_result', {'cell_id': cell_id, 'output': result['output'], 'status': result['status']})
+
+# --- Collaborative Editing ---
+@socketio.on('join_notebook')
+def on_join_notebook(data):
+    room = data.get('room', 'global')
+    join_room(room)
+
+@socketio.on('leave_notebook')
+def on_leave_notebook(data):
+    room = data.get('room', 'global')
+    leave_room(room)
+
+@socketio.on('cell_edit')
+def on_cell_edit(data):
+    room = data.get('room', 'global')
+    emit('cell_edit', data, room=room, include_self=False)
+
+@socketio.on('cell_add')
+def on_cell_add(data):
+    room = data.get('room', 'global')
+    emit('cell_add', data, room=room, include_self=False)
+
+@socketio.on('cell_delete')
+def on_cell_delete(data):
+    room = data.get('room', 'global')
+    emit('cell_delete', data, room=room, include_self=False)
+
+@socketio.on('cell_reorder')
+def on_cell_reorder(data):
+    room = data.get('room', 'global')
+    emit('cell_reorder', data, room=room, include_self=False)
+
+@socketio.on('nb_title')
+def on_nb_title(data):
+    room = data.get('room', 'global')
+    emit('nb_title', data, room=room, include_self=False)

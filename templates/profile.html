@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="w-full h-full flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl p-8 w-full max-w-md">
+        <h1 class="font-nothing text-3xl text-white tracking-widest text-center mb-8">PROFILE<span class="text-n-red">.</span></h1>
+        <form id="profile-form" class="space-y-4" onsubmit="return doUpdateProfile(event)">
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">USERNAME</label>
+                <input type="text" id="prof-username" value="{{ user.username }}" disabled class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-gray-400 focus:outline-none cursor-not-allowed">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">FULL NAME</label>
+                <input type="text" id="prof-fullname" value="{{ user.full_name or '' }}" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">EMAIL</label>
+                <input type="email" id="prof-email" value="{{ user.email or '' }}" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50">
+            </div>
+            <hr class="border-white/10 my-2">
+            <p class="text-xs text-gray-500 font-mono">CHANGE PASSWORD (leave blank to keep)</p>
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">NEW PASSWORD</label>
+                <input type="password" id="prof-password" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">CONFIRM NEW PASSWORD</label>
+                <input type="password" id="prof-confirm" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50">
+            </div>
+            <div id="prof-error" class="text-xs text-n-red hidden"></div>
+            <div id="prof-success" class="text-xs text-green-400 hidden"></div>
+            <button type="submit" class="w-full py-2.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/40 transition text-sm font-bold">UPDATE PROFILE</button>
+        </form>
+        <div class="flex gap-2 mt-4">
+            <a href="/settings" class="flex-1 text-center py-2 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition text-xs font-bold">SETTINGS</a>
+            <a href="/" class="flex-1 text-center py-2 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition text-xs font-bold">EDITOR</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function doUpdateProfile(e) {
+    e.preventDefault();
+    const payload = {
+        full_name: $('#prof-fullname').val(),
+        email: $('#prof-email').val()
+    };
+    const pw = $('#prof-password').val();
+    if (pw) {
+        if (pw !== $('#prof-confirm').val()) { $('#prof-error').text('Passwords do not match').removeClass('hidden'); return false; }
+        payload.password = pw;
+        payload.confirm_password = pw;
+    }
+    $.ajax({
+        url: '/auth/profile', type: 'POST', contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: (res) => { $('#prof-success').text('Profile updated').removeClass('hidden'); $('#prof-error').addClass('hidden'); },
+        error: (e) => { $('#prof-error').text(e.responseJSON?.error || 'Update failed').removeClass('hidden'); }
+    });
+    return false;
+}
+</script>
+{% endblock %}

@@ -43,35 +43,45 @@
 </div>
 
 <!-- Sidebar -->
-<aside id="sidebar" class="fixed inset-y-0 left-0 w-[85%] md:w-96 glass-panel z-50 transform -translate-x-full md:translate-x-0 md:relative flex flex-col transition-transform duration-300 border-r border-white/5 bg-[#0a0a0a]">
-    <div class="p-6 h-full flex flex-col">
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-[85%] md:w-72 glass-panel z-50 transform -translate-x-full md:translate-x-0 md:relative flex flex-col transition-all duration-300 border-r border-white/5 bg-[#0a0a0a]">
+    <div class="p-4 h-full flex flex-col overflow-hidden">
         <!-- Sidebar Header with Project Actions -->
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="font-nothing text-4xl text-white tracking-widest">N-BOOK<span class="text-n-red">.</span></h1>
-            <div class="flex gap-2">
-                <button onclick="newProject()" title="New Project" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="font-nothing text-3xl text-white tracking-widest" id="sidebar-title">N-BOOK<span class="text-n-red">.</span></h1>
+            <div class="flex gap-1">
+                <button onclick="toggleSidebar()" id="sidebar-collapse-btn" title="Collapse Sidebar" class="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
-                <button onclick="openHistory()" title="Project History" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <button onclick="newProject()" title="New Project" class="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+                <button onclick="openHistory()" title="Project History" class="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
             </div>
         </div>
-        <div id="auth-info" class="flex items-center justify-between mb-4 px-2 py-1.5 rounded-lg bg-white/5">
-            <span id="auth-username" class="text-xs text-gray-400 font-mono">Not logged in</span>
-            <div id="auth-buttons" class="flex gap-2">
-                <a href="/auth/login" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">LOGIN</a>
-                <a href="/auth/register" class="text-[10px] text-green-400 hover:text-green-300 font-bold">REGISTER</a>
+        <div id="auth-info" class="flex items-center justify-between mb-2 px-2 py-1 rounded-lg bg-white/5">
+            <span id="auth-username" class="text-[10px] text-gray-400 font-mono">Not logged in</span>
+            <div id="auth-buttons" class="flex gap-1">
+                <a href="/auth/login" class="text-[9px] text-blue-400 hover:text-blue-300 font-bold">LOGIN</a>
+                <a href="/auth/register" class="text-[9px] text-green-400 hover:text-green-300 font-bold">REGISTER</a>
             </div>
-            <button id="logout-btn" class="hidden text-[10px] text-n-red hover:text-red-400 font-bold" onclick="doLogout()">LOGOUT</button>
+            <button id="logout-btn" class="hidden text-[9px] text-n-red hover:text-red-400 font-bold" onclick="doLogout()">LOGOUT</button>
+        </div>
+        
+        <!-- Nav Buttons -->
+        <div class="flex gap-1 mb-2">
+            <button onclick="toggleTheme()" id="sidebar-theme-btn" title="Toggle Theme" class="flex-1 py-1 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition text-[9px] font-bold">DARK</button>
+            <a href="/settings" class="flex-1 py-1 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition text-[9px] font-bold text-center">SETTINGS</a>
+            <a href="/auth/profile" class="flex-1 py-1 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition text-[9px] font-bold text-center">PROFILE</a>
         </div>
         
         <!-- Tabs -->
-        <div class="flex gap-4 border-b border-white/10 pb-2">
-            <button onclick="switchTab('files')" class="tab-btn active text-xs font-bold text-white pb-1 border-b-2 border-n-red">FILES</button>
-            <button onclick="switchTab('term')" class="tab-btn text-xs font-bold text-gray-500 pb-1 hover:text-white">TERM</button>
-            <button onclick="switchTab('vars')" class="tab-btn text-xs font-bold text-gray-500 pb-1 hover:text-white">VARS</button>
-            <button onclick="switchTab('git')" class="tab-btn text-xs font-bold text-gray-500 pb-1 hover:text-white">GIT</button>
+        <div class="flex gap-2 border-b border-white/10 pb-1">
+            <button onclick="switchTab('files')" class="tab-btn active text-[10px] font-bold text-white pb-1 border-b-2 border-n-red">FILES</button>
+            <button onclick="switchTab('term')" class="tab-btn text-[10px] font-bold text-gray-500 pb-1 hover:text-white">TERM</button>
+            <button onclick="switchTab('vars')" class="tab-btn text-[10px] font-bold text-gray-500 pb-1 hover:text-white">VARS</button>
+            <button onclick="switchTab('git')" class="tab-btn text-[10px] font-bold text-gray-500 pb-1 hover:text-white">GIT</button>
         </div>
 
         <div class="mt-4 flex-1 overflow-hidden relative">
@@ -111,13 +121,12 @@
             </div>
         </div>
 
-        <div class="pt-4 border-t border-white/10 mt-auto space-y-2">
-            <button onclick="toggleTheme()" id="theme-toggle-btn" class="w-full py-2 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition text-xs font-bold">DARK MODE</button>
-            <button onclick="saveProject()" class="w-full py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded hover:bg-blue-500 hover:text-white transition text-xs font-bold">SAVE PROJECT</button>
-            <div class="flex gap-2">
-                <button onclick="downloadJSON()" class="flex-1 py-2 bg-n-red/10 text-n-red border border-n-red/20 rounded hover:bg-n-red hover:text-white transition text-xs font-bold">EXPORT JSON</button>
-                <button onclick="exportHTML()" class="flex-1 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded hover:bg-purple-500 hover:text-white transition text-xs font-bold">EXPORT HTML</button>
-                <button onclick="exportPDF()" class="flex-1 py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded hover:bg-rose-500 hover:text-white transition text-xs font-bold">EXPORT PDF</button>
+        <div class="pt-2 border-t border-white/10 mt-auto space-y-1.5">
+            <button onclick="saveProject()" class="w-full py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded hover:bg-blue-500 hover:text-white transition text-[10px] font-bold">SAVE PROJECT</button>
+            <div class="flex gap-1">
+                <button onclick="downloadJSON()" class="flex-1 py-1.5 bg-n-red/10 text-n-red border border-n-red/20 rounded hover:bg-n-red hover:text-white transition text-[9px] font-bold">JSON</button>
+                <button onclick="exportHTML()" class="flex-1 py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded hover:bg-purple-500 hover:text-white transition text-[9px] font-bold">HTML</button>
+                <button onclick="exportPDF()" class="flex-1 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded hover:bg-rose-500 hover:text-white transition text-[9px] font-bold">PDF</button>
             </div>
         </div>
     </div>
@@ -149,9 +158,6 @@
             </div>
 
             <div class="flex gap-2 relative items-center">
-                <button onclick="toggleTheme()" id="theme-toggle-header" title="Toggle Theme" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                </button>
                 <button onclick="undoCell()" title="Undo" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h13a4 4 0 010 8H7"/><path d="M7 6l-4 4 4 4"/></svg>
                 </button>
@@ -198,11 +204,16 @@
     if (apiKey) $.ajaxSetup({ headers: { 'X-API-KEY': apiKey } });
     const socket = io({ query: apiKey ? { key: apiKey } : {} });
     
+    let sidebarCollapsed = localStorage.getItem('nbook-sidebar') === 'collapsed';
     let cellCount = 0;
     const editors = {};
     let currentPath = "";
     let term = null; let fitAddon = null;
     let currentTheme = localStorage.getItem('nbook-theme') || 'dark';
+    let cmTheme = localStorage.getItem('nbook-cm-theme') || '';
+    let collabRoom = null;
+    let collabActive = true;
+    let isCollabEdit = false;
 
     // --- CELL SEARCH ---
     $(document).on('input', '#search-cell', function() {
@@ -216,19 +227,41 @@
     });
 
     // --- THEME TOGGLE ---
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+        localStorage.setItem('nbook-sidebar', sidebarCollapsed ? 'collapsed' : 'expanded');
+        applySidebarState();
+    }
+
+    function applySidebarState() {
+        const $sidebar = $('#sidebar');
+        const $main = $('main');
+        if(sidebarCollapsed) {
+            $sidebar.css({'width': '0px', 'min-width': '0px', 'overflow': 'hidden', 'padding': '0', 'border': 'none'});
+            $main.css('margin-left', '0');
+        } else {
+            $sidebar.css({'width': '', 'min-width': '', 'overflow': '', 'padding': '', 'border': ''});
+            $main.css('margin-left', '');
+        }
+    }
+
     function toggleTheme() {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
         localStorage.setItem('nbook-theme', currentTheme);
         applyTheme();
     }
 
-    function setCellTheme(id, theme) {
-        const el = $(`#${id}`);
-        el.attr('data-theme', theme);
-        if(theme) {
-            editors[id].setOption('theme', theme);
-        } else {
-            editors[id].setOption('theme', currentTheme === 'dark' ? 'material-palenight' : 'default');
+    function applyTheme() {
+        const isDark = currentTheme === 'dark';
+        $('html').attr('class', isDark ? 'dark' : '');
+        const bg = isDark ? '#0a0a0a' : '#ffffff';
+        const fg = isDark ? '#e5e5e5' : '#1a1a1a';
+        document.body.style.backgroundColor = bg;
+        document.body.style.color = fg;
+        $('#sidebar-theme-btn').text(isDark ? 'DARK' : 'LIGHT');
+        const activeCMTheme = cmTheme || (isDark ? 'material-palenight' : 'default');
+        for(let id in editors) {
+            editors[id].setOption('theme', activeCMTheme);
         }
     }
 
@@ -301,8 +334,10 @@
     // --- INITIALIZATION ---
     $(document).ready(() => {
         applyTheme();
+        applySidebarState();
         checkAuth();
         if(loadId) {
+            collabJoin(`nb-${loadId}`);
             $.get(`/history/load/${loadId}`, (data) => {
                 $('#nb-title').val(data.title);
                 data.cells.forEach(c => addCell(c.language, c.code));
@@ -310,6 +345,10 @@
         } else {
             addCell('python');
         }
+        // Title change -> collab
+        $('#nb-title').on('input', function() {
+            collabEmit('nb_title', {title: $(this).val()});
+        });
         loadFiles();
         // Auto-save every 30 seconds if there are cells
         setInterval(() => {
@@ -320,6 +359,7 @@
     // --- PROJECT ACTIONS ---
     function newProject() {
         if(!confirm("Clear current project? Unsaved changes will be lost.")) return;
+        collabLeave();
         $('#notebook-container').empty();
         $('#nb-title').val("Untitled Research");
         for(let id in editors) { delete editors[id]; }
@@ -503,9 +543,19 @@
         } else {
             target.before($src);
         }
+        const order = [];
+        $('#notebook-container').find('.glass-panel[id^="cell-"]').each(function() { order.push($(this).attr('id')); });
+        collabEmit('cell_reorder', {order});
     });
 
     // --- CANCELLATION ---
+    function deleteCell(id) {
+        if(!editors[id]) return;
+        collabEmit('cell_delete', {cell_id: id});
+        $(`#${id}`).remove();
+        delete editors[id];
+    }
+
     function cancelExecution() {
         $.post('/kernel/cancel', () => {
             $('#cancel-btn').addClass('hidden');
@@ -521,9 +571,9 @@
     }
 
     // --- CELL LOGIC ---
-    function addCell(lang, content=null) {
+    function addCell(lang, content=null, cellId=null) {
         cellCount++;
-        const id = `cell-${cellCount}`;
+        const id = cellId || `cell-${cellCount}`;
         const langColors = {
             python: 'bg-blue-500/20 text-blue-300',
             html: 'bg-orange-500/20 text-orange-300',
@@ -539,20 +589,12 @@
                 <div class="flex gap-2 items-center">
                     <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-white transition" draggable="true" title="Drag to reorder"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zM8 11h2v2H8v-2zm6 0h2v2h-2v-2zm-6 5h2v2H8v-2zm6 0h2v2h-2v-2z"/></svg></span>
                     <span class="lang-tag font-nothing text-[10px] ${badgeColor} px-2 py-0.5 rounded uppercase tracking-wider border border-white/5">${lang}</span>
-                    <select class="theme-select bg-black/40 border border-white/10 rounded text-[9px] text-gray-400 px-1 py-0.5 focus:outline-none" onchange="setCellTheme('${id}', this.value)" title="Cell theme">
-                        <option value="">Global</option>
-                        <option value="material-palenight">Palenight</option>
-                        <option value="darcula">Darcula</option>
-                        <option value="monokai">Monokai</option>
-                        <option value="solarized dark">Solarized</option>
-                        <option value="default">Light</option>
-                    </select>
                     <span class="status font-mono text-[10px] text-gray-500">READY</span>
                 </div>
                 <div class="flex gap-3">
                     <button class="text-white hover:text-green-400 px-2 py-1 rounded bg-white/5 text-[10px] font-bold run-btn" onclick="runCell('${id}', '${lang}')">${runBtnLabel}</button>
                     <button class="text-gray-500 hover:text-blue-400 undo-btn" onclick="undoCell('${id}')" title="Undo"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h13a4 4 0 010 8H7"/><path d="M7 6l-4 4 4 4"/></svg></button>
-                    <button class="text-gray-500 hover:text-n-red" onclick="$('#${id}').remove(); delete editors['${id}'];"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+                    <button class="text-gray-500 hover:text-n-red" onclick="deleteCell('${id}');"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
                 </div>
             </div>
             <div class="px-2 pt-2"><textarea class="code-area w-full"></textarea></div>
@@ -574,6 +616,14 @@
             extraKeys: {"Ctrl-Space": "autocomplete"},
             hintOptions: {completeSingle: false}
         });
+        let _editTimer = null;
+        cm.on('change', () => {
+            if(isCollabEdit) return;
+            clearTimeout(_editTimer);
+            _editTimer = setTimeout(() => {
+                collabEmit('cell_edit', {cell_id: id, code: cm.getValue(), language: lang, cursor: cm.getCursor()});
+            }, 500);
+        });
         const defaults = {
             python: 'print("Hello")',
             html: '<h3>Hello</h3>',
@@ -584,6 +634,7 @@
         if(content) cm.setValue(content);
         else cm.setValue(defaults[lang] || '');
         editors[id] = cm;
+        if(!cellId) collabEmit('cell_add', {cell_id: id, language: lang, code: content || defaults[lang]});
         $('#plus-menu').addClass('hidden'); $('#mobile-fab-menu').addClass('hidden'); $('#fab-plus').removeClass('rotate-45');
     }
 
@@ -688,6 +739,52 @@
         const statusColor = d.status === 'cancelled' ? 'text-red-500' : 'text-green-500';
         c.find('.status').text(statusText).addClass(statusColor);
     });
+
+    // --- COLLABORATIVE EDITING ---
+    function collabJoin(room) {
+        collabRoom = room;
+        socket.emit('join_notebook', {room});
+    }
+    function collabLeave() {
+        if(collabRoom) socket.emit('leave_notebook', {room: collabRoom});
+        collabRoom = null;
+    }
+    function collabEmit(event, data) {
+        if(!collabRoom) return;
+        socket.emit(event, {room: collabRoom, ...data});
+    }
+
+    // Collab listeners
+    socket.on('cell_edit', d => {
+        if(!d.cell_id || !editors[d.cell_id]) return;
+        isCollabEdit = true;
+        const cm = editors[d.cell_id];
+        const cursor = cm.getCursor();
+        cm.setValue(d.code);
+        if(d.cursor) cm.setCursor(d.cursor);
+        isCollabEdit = false;
+    });
+    socket.on('cell_add', d => {
+        addCell(d.language, d.code, d.cell_id);
+    });
+    socket.on('cell_delete', d => {
+        if(!d.cell_id || !editors[d.cell_id]) return;
+        $(`#${d.cell_id}`).remove();
+        delete editors[d.cell_id];
+    });
+    socket.on('cell_reorder', d => {
+        if(!d.order) return;
+        const container = $('#notebook-container');
+        const cells = container.find('.glass-panel[id^="cell-"]');
+        const current = {};
+        cells.each(function() { current[$(this).attr('id')] = $(this); });
+        const sorted = d.order.filter(id => current[id]).map(id => current[id]);
+        sorted.forEach(el => container.append(el));
+    });
+    socket.on('nb_title', d => {
+        if(d.title) $('#nb-title').val(d.title);
+    });
+
     $(document).click(e=>{if(!$(e.target).closest('#plus-menu, button[onclick="togglePlusMenu()"]').length)$('#plus-menu').addClass('hidden');}); $('#mobile-menu-btn, #drawer-overlay').click(()=>{ $('#sidebar').toggleClass('-translate-x-full'); $('#drawer-overlay').toggleClass('hidden opacity-0'); });
     function togglePlusMenu() {$('#plus-menu').toggleClass('hidden');} function toggleMobileFab() {$('#mobile-fab-menu').toggleClass('hidden');$('#fab-plus').toggleClass('rotate-45');}
 </script>

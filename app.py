@@ -6,6 +6,7 @@ from config import Config
 # Import Core Components
 from core import db, socketio
 from core.routes import main_bp
+from core.auth import auth_bp
 from core.cli import create_cli
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["200 per minute", "20 per second"])
@@ -29,6 +30,7 @@ def create_app():
         return response
 
     # Register Routes
+    app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
 
     # Error handlers

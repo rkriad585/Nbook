@@ -12,8 +12,10 @@ class TestRoutes:
         app = create_app()
         app.config['TESTING'] = True
         app.config['NBOOK_MODE'] = 'free'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         with app.app_context():
             from core import db
+            db.drop_all()
             db.create_all()
         return app
 

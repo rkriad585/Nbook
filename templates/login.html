@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="w-full h-full flex items-center justify-center">
+    <div class="glass-panel rounded-2xl p-8 w-full max-w-sm mx-4">
+        <h1 class="font-nothing text-3xl text-white tracking-widest text-center mb-8">LOGIN<span class="text-n-red">.</span></h1>
+        <form id="login-form" class="space-y-4" onsubmit="return doLogin(event)">
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">USERNAME</label>
+                <input type="text" id="login-username" required class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 font-mono block mb-1">PASSWORD</label>
+                <input type="password" id="login-password" required class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50">
+            </div>
+            <div id="login-error" class="text-xs text-n-red hidden"></div>
+            <button type="submit" class="w-full py-2.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/40 transition text-sm font-bold">LOGIN</button>
+        </form>
+        <p class="text-xs text-gray-500 text-center mt-6">No account? <a href="/auth/register" class="text-blue-400 hover:text-blue-300">Register</a></p>
+        <p class="text-xs text-gray-500 text-center mt-2"><a href="/" class="text-gray-600 hover:text-gray-400">Back to editor</a></p>
+    </div>
+</div>
+
+<script>
+function doLogin(e) {
+    e.preventDefault();
+    const username = $('#login-username').val();
+    const password = $('#login-password').val();
+    $.ajax({
+        url: '/auth/login', type: 'POST', contentType: 'application/json',
+        data: JSON.stringify({username, password}),
+        success: (res) => { window.location.href = '/'; },
+        error: (e) => { $('#login-error').text(e.responseJSON?.error || 'Login failed').removeClass('hidden'); }
+    });
+    return false;
+}
+</script>
+{% endblock %}

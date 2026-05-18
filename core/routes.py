@@ -247,6 +247,41 @@ def export_html():
     response.mimetype = 'text/html'
     return response
 
+@main_bp.route('/export/pdf', methods=['POST'])
+def export_pdf():
+    data = request.json
+    cells = data.get('cells', [])
+    title = data.get('title', 'Notebook')
+    html_parts = [f'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>{title}</title>']
+    html_parts.append('<style>body{background:#fff;color:#1a1a1a;font-family:monospace;padding:2rem;max-width:900px;margin:auto}')
+    html_parts.append('h1{font-size:1.5em;margin-bottom:1rem}')
+    html_parts.append('pre{background:#f5f5f5;padding:1rem;border-radius:4px;overflow-x:auto;white-space:pre-wrap}')
+    html_parts.append('hr{border-color:#ddd;margin:1.5rem 0}')
+    html_parts.append('@media print{body{padding:0}}')
+    html_parts.append('</style></head><body>')
+    html_parts.append(f'<h1>{title}</h1>')
+    for c in cells:
+        lang = c.get('language', '')
+        code = c.get('code', '')
+        if lang == 'markdown':
+            html_parts.append(f'<div>{code}</div>')
+        elif lang == 'html':
+            html_parts.append(f'<div>{code}</div>')
+        else:
+            html_parts.append(f'<pre><code>{code}</code></pre>')
+        html_parts.append('<hr>')
+    html_parts.append('</body></html>')
+    html_str = '\n'.join(html_parts)
+    try:
+        import weasyprint
+        pdf = weasyprint.HTML(string=html_str).write_pdf()
+        response = make_response(pdf)
+        response.headers['Content-Disposition'] = f'attachment; filename={title}.pdf'
+        response.mimetype = 'application/pdf'
+        return response
+    except ImportError:
+        return jsonify({"error": "PDF export requires weasyprint: pip install weasyprint"}), 400
+
 # --- History Routes ---
 @main_bp.route('/history')
 def history_page():

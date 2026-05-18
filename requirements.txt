@@ -8,3 +8,4 @@ Click>=8.0.0
 matplotlib>=3.5.0
 python-socketio>=5.0.0
 python-dotenv>=1.0.0
+weasyprint>=60.0

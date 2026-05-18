@@ -74,6 +74,19 @@
         .CodeMirror-gutters { background: transparent !important; border: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
+        /* Responsive */
+        @media (max-width: 768px) {
+            .glass-panel { border-radius: 16px !important; }
+            .CodeMirror { font-size: 12px !important; min-height: 60px !important; }
+            #notebook-container { padding: 0.75rem !important; }
+            #notebook-container .glass-panel { margin-bottom: 0.75rem !important; }
+        }
+        @media (max-width: 480px) {
+            #notebook-container { padding: 0.5rem !important; }
+            #notebook-container .glass-panel { margin-bottom: 0.5rem !important; border-radius: 12px !important; }
+            .CodeMirror { font-size: 11px !important; min-height: 50px !important; }
+        }
+        
         /* Markdown Styles */
         .prose h1 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; color: white; }
         .prose h2 { font-size: 1.25em; font-weight: bold; margin-bottom: 0.5em; color: #e5e5e5; }

@@ -132,54 +132,52 @@
     </div>
 </aside>
 
-<!-- Main Area -->
-<main class="flex-1 flex flex-col h-[calc(100vh-3.5rem)] md:h-screen w-full relative">
-    <!-- Desktop Header -->
-    <div class="hidden md:flex items-center justify-between p-6">
-        <div class="flex-1 flex items-center gap-4">
-             <input type="text" id="nb-title" value="Untitled Research" class="bg-transparent text-xl font-bold focus:outline-none font-sans placeholder-gray-600 max-w-xs">
-             <div class="relative flex-1 max-w-xs">
-                 <input type="text" id="search-cell" placeholder="Search cells..." class="w-full bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50">
-                 <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-             </div>
-        </div>
-        
-        <div class="flex items-center gap-6">
-            <div class="flex items-center gap-4 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
-                <div class="group relative cursor-help">
-                    <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-gray-400">RAM</span><div class="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden"><div id="ram-bar" class="h-full bg-green-500 w-0 transition-all duration-500"></div></div></div>
-                    <div class="hidden group-hover:block absolute top-6 left-0 bg-black border border-white/10 p-2 rounded text-[10px] w-24 z-50"><div id="ram-text" class="text-white">-- / -- GB</div></div>
-                </div>
-                <div class="group relative cursor-help">
-                    <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-gray-400">DISK</span><div class="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden"><div id="disk-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div></div></div>
-                    <div class="hidden group-hover:block absolute top-6 left-0 bg-black border border-white/10 p-2 rounded text-[10px] w-24 z-50"><div id="disk-text" class="text-white">-- / -- GB</div></div>
-                </div>
-                <div class="flex items-center gap-2 border-l border-white/10 pl-4"><span id="conn-text" class="text-[10px] font-bold text-gray-500">CONNECTING</span><div class="w-2.5 h-2.5 rounded-full bg-n-red animate-pulse" id="status-dot-desktop"></div></div>
+    <!-- Main Area -->
+    <main class="flex-1 flex flex-col h-[calc(100vh-3.5rem)] md:h-screen w-full relative min-w-0">
+        <!-- Desktop Header -->
+        <div class="hidden md:flex flex-wrap items-center justify-between p-3 lg:p-6 gap-3">
+            <div class="flex-1 flex items-center gap-3 min-w-0">
+                 <input type="text" id="nb-title" value="Untitled Research" class="bg-transparent text-lg lg:text-xl font-bold focus:outline-none font-sans placeholder-gray-600 w-32 lg:w-auto lg:max-w-xs truncate">
+                 <div class="relative flex-1 max-w-[160px] lg:max-w-xs">
+                     <input type="text" id="search-cell" placeholder="Search..." class="w-full bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-[10px] lg:text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50">
+                     <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                 </div>
             </div>
-
-            <div class="flex gap-2 relative items-center">
-                <button onclick="undoCell()" title="Undo" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h13a4 4 0 010 8H7"/><path d="M7 6l-4 4 4 4"/></svg>
-                </button>
-                <button onclick="redoCell()" title="Redo" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10H8a4 4 0 000 8h10"/><path d="M17 6l4 4-4 4"/></svg>
-                </button>
-                <button onclick="restartKernel()" class="px-4 py-1.5 rounded-full border border-n-red/50 text-n-red hover:bg-n-red hover:text-white transition text-xs font-bold">RESTART</button>
-                    <button onclick="cancelExecution()" class="px-4 py-1.5 rounded-full border border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-white transition text-xs font-bold hidden" id="cancel-btn">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="inline"><path d="M6 6l12 12M6 18L18 6"/></svg> STOP</button>
-                <button onclick="addCell('python')" class="px-5 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition text-xs font-bold tracking-widest flex items-center gap-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> PYTHON</button>
-                <div class="relative">
-                    <button onclick="togglePlusMenu()" class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/20 transition text-white font-bold text-lg flex items-center justify-center">+</button>
-                    <div id="plus-menu" class="hidden absolute top-10 right-0 glass-panel rounded-xl flex flex-col w-36 shadow-xl z-50 overflow-hidden">
-                        <button onclick="addCell('html')" class="px-4 py-2 text-left text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-orange-500">&lt;&gt;</span> HTML</button>
-                        <button onclick="addCell('markdown')" class="px-4 py-2 text-left text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-purple-500">M↓</span> MARKDOWN</button>
-                        <button onclick="addCell('javascript')" class="px-4 py-2 text-left text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-yellow-500">JS</span> JAVASCRIPT</button>
-                        <button onclick="addCell('bash')" class="px-4 py-2 text-left text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white flex items-center gap-2"><span class="text-green-500">$</span> BASH</button>
+            
+            <div class="flex items-center gap-3 lg:gap-4">
+                <div class="flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl bg-white/5 border border-white/5">
+                    <div class="group relative cursor-help">
+                        <div class="flex items-center gap-1.5"><span class="text-[9px] lg:text-[10px] font-bold text-gray-400">RAM</span><div class="w-10 lg:w-14 h-1.5 bg-gray-700 rounded-full overflow-hidden"><div id="ram-bar" class="h-full bg-green-500 w-0 transition-all duration-500"></div></div></div>
+                    </div>
+                    <div class="group relative cursor-help">
+                        <div class="flex items-center gap-1.5"><span class="text-[9px] lg:text-[10px] font-bold text-gray-400">DSK</span><div class="w-10 lg:w-14 h-1.5 bg-gray-700 rounded-full overflow-hidden"><div id="disk-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div></div></div>
+                    </div>
+                    <div class="flex items-center gap-1.5 border-l border-white/10 pl-2 lg:pl-3"><span id="conn-text" class="text-[9px] lg:text-[10px] font-bold text-gray-500">...</span><div class="w-2 h-2 rounded-full bg-n-red animate-pulse" id="status-dot-desktop"></div></div>
+                </div>
+    
+                <div class="flex gap-1.5 lg:gap-2 relative items-center flex-wrap">
+                    <button onclick="undoCell()" title="Undo" class="p-1.5 lg:p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h13a4 4 0 010 8H7"/><path d="M7 6l-4 4 4 4"/></svg>
+                    </button>
+                    <button onclick="redoCell()" title="Redo" class="p-1.5 lg:p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10H8a4 4 0 000 8h10"/><path d="M17 6l4 4-4 4"/></svg>
+                    </button>
+                    <button onclick="restartKernel()" class="px-3 lg:px-4 py-1 lg:py-1.5 rounded-full border border-n-red/50 text-n-red hover:bg-n-red hover:text-white transition text-[9px] lg:text-xs font-bold">RESTART</button>
+                        <button onclick="cancelExecution()" class="px-3 lg:px-4 py-1 lg:py-1.5 rounded-full border border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-white transition text-[9px] lg:text-xs font-bold hidden" id="cancel-btn">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="inline"><path d="M6 6l12 12M6 18L18 6"/></svg> STOP</button>
+                    <button onclick="addCell('python')" class="px-3 lg:px-5 py-1 lg:py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition text-[9px] lg:text-xs font-bold tracking-widest flex items-center gap-1.5"><span class="w-1.5 h-1.5 lg:w-2 lg:h-2 bg-blue-500 rounded-full"></span> PY</button>
+                    <div class="relative">
+                        <button onclick="togglePlusMenu()" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/20 transition text-white font-bold text-base lg:text-lg flex items-center justify-center">+</button>
+                        <div id="plus-menu" class="hidden absolute top-8 lg:top-10 right-0 glass-panel rounded-xl flex flex-col w-32 lg:w-36 shadow-xl z-50 overflow-hidden">
+                            <button onclick="addCell('html')" class="px-3 lg:px-4 py-1.5 lg:py-2 text-left text-[10px] lg:text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-orange-500">&lt;&gt;</span> HTML</button>
+                            <button onclick="addCell('markdown')" class="px-3 lg:px-4 py-1.5 lg:py-2 text-left text-[10px] lg:text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-purple-500">M↓</span> MARKDOWN</button>
+                            <button onclick="addCell('javascript')" class="px-3 lg:px-4 py-1.5 lg:py-2 text-left text-[10px] lg:text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white border-b border-white/5 flex items-center gap-2"><span class="text-yellow-500">JS</span> JAVASCRIPT</button>
+                            <button onclick="addCell('bash')" class="px-3 lg:px-4 py-1.5 lg:py-2 text-left text-[10px] lg:text-xs font-bold hover:bg-white/10 text-gray-300 hover:text-white flex items-center gap-2"><span class="text-green-500">$</span> BASH</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Notebook -->
     <div id="notebook-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-32 no-scrollbar w-full"></div>

@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.git
+.gitignore
+.env
+data/
+workspace/
+venv/
+.venv/
+README.md
+PLAN.md
+docs/

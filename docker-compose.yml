@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  nbook:
+    build: .
+    container_name: nbook
+    ports:
+      - "52896:52896"
+    volumes:
+      - ./data:/app/data
+      - ./workspace:/app/workspace
+      - ./.env:/app/.env:ro
+    environment:
+      - NBOOK_MODE=free
+      - NBOOK_PORT=52896
+    restart: unless-stopped

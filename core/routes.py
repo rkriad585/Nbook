@@ -310,6 +310,9 @@ def save_notebook():
 @socketio.on('connect')
 def on_connect():
     global TERMINAL_FD, TERMINAL_PROC
+    api_key = request.args.get('key')
+    if current_app.config.get('NBOOK_MODE') == 'secure' and api_key != current_app.config.get('NBOOK_API_KEY'):
+        return False
     if HAS_PTY and TERMINAL_FD: return
     if not HAS_PTY and TERMINAL_PROC: return
     if HAS_PTY:

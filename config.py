@@ -19,3 +19,6 @@ class Config:
     NBOOK_MODE = os.environ.get('NBOOK_MODE', 'free')
     NBOOK_API_KEY = None
     NBOOK_PORT = int(os.environ.get('NBOOK_PORT', 52896))
+    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max upload
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_HTTPONLY = True
